@@ -2,12 +2,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyDisplay = document.getElementById('history');
     const expressionDisplay = document.getElementById('expression');
     const resultDisplay = document.getElementById('result');
-    const buttons = document.querySelectorAll('.calc-btn');
+    const buttons = document.querySelectorAll('.calc-btn:not(#functions-button)');
+    const functionsButton = document.getElementById('functions-button');
+    const scientificFunctionsWrapper = document.getElementById('scientific-functions-wrapper');
 
     let expression = '';
     let result = '0';
     let memory = 0;
     let history = [];
+    let isScientificExpanded = false;
+
+    // Toggle Scientific Functions
+    functionsButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        isScientificExpanded = !isScientificExpanded;
+        scientificFunctionsWrapper.classList.toggle('expanded', isScientificExpanded);
+        console.log('Toggle clicked, expanded:', isScientificExpanded);
+    });
 
     buttons.forEach(button => {
         button.addEventListener('click', () => {
@@ -74,6 +85,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (!expression) expression = '0';
             }
+        } else if (value === '(' || value === ')') {
+            if (expression === '0') {
+                expression = value;
+            } else {
+                expression += value;
+            }
         } else {
             if (expression === '0') {
                 expression = '';
@@ -83,62 +100,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleFunction(value) {
-        // Evaluate the current expression to get the latest result
-        if (expression && expression !== '0') {
-            evaluateExpression();
-        }
+        const lastChar = expression.trim().slice(-1);
+        const isOperatorOrParen = ['+', '-', '*', '/', '^', '('].includes(lastChar);
 
-        const num = expression && expression !== '0' ? parseFloat(result) : 0;
-        let funcResult = null;
-
-        switch (value) {
-            case 'ln': funcResult = num > 0 ? Math.log(num).toFixed(6) : 'Error'; break;
-            case '1/x': funcResult = num !== 0 ? (1 / num).toFixed(6) : 'Error'; break;
-            case 'x^y': expression = result !== '0' ? `${result} ^ ` : '0 ^ '; return;
-            case 'log': funcResult = num > 0 ? Math.log10(num).toFixed(6) : 'Error'; break;
-            case 'e^x': funcResult = Math.exp(num).toFixed(6); break;
-            case 'sec': funcResult = num !== 0 ? (1 / Math.cos(num * Math.PI / 180)).toFixed(6) : 'Error'; break;
-            case 'acos': funcResult = Math.abs(num) <= 1 ? (Math.acos(num) * 180 / Math.PI).toFixed(6) : 'Error'; break;
-            case 'y^x': expression = result !== '0' ? `${result} ^ ` : '0 ^ '; return;
-            case '10^x': funcResult = Math.pow(10, num).toFixed(6); break;
-            case 'x^2': funcResult = Math.pow(num, 2).toFixed(6); break;
-            case 'csc': funcResult = num !== 0 ? (1 / Math.sin(num * Math.PI / 180)).toFixed(6) : 'Error'; break;
-            case 'n!': funcResult = num >= 0 && Number.isInteger(num) && num <= 170 ? factorial(num).toString() : 'Error'; break;
-            case 'pi': expression = Math.PI.toFixed(6); return;
-            case 'cos': funcResult = Math.cos(num * Math.PI / 180).toFixed(6); break;
-            case 'cosh': funcResult = Math.cosh(num).toFixed(6); break;
-            case 'tanh': funcResult = Math.tanh(num).toFixed(6); break;
-            case 'sqrt': funcResult = num >= 0 ? Math.sqrt(num).toFixed(6) : 'Error'; break;
-            case 'sinh': funcResult = Math.sinh(num).toFixed(6); break;
-            case 'asin': funcResult = Math.abs(num) <= 1 ? (Math.asin(num) * 180 / Math.PI).toFixed(6) : 'Error'; break;
-            case 'atan': funcResult = (Math.atan(num) * 180 / Math.PI).toFixed(6); break;
-            case 'cot': funcResult = num !== 0 ? (1 / Math.tan(num * Math.PI / 180)).toFixed(6) : 'Error'; break;
-            case 'sin': funcResult = Math.sin(num * Math.PI / 180).toFixed(6); break;
-            case 'tan': funcResult = Math.abs(num % 180 - 90) < 1e-10 ? 'Error' : Math.tan(num * Math.PI / 180).toFixed(6); break;
-            case 'e':
-                if (expression === '0') {
-                    expression = Math.E.toFixed(6);
-                } else {
-                    expression += ` ${Math.E.toFixed(6)} `;
-                }
-                return; // Don't evaluate immediately, let the user build the expression
-        }
-
-        if (funcResult !== null) {
-            expression = `${value}(${num})`;
-            result = funcResult;
-            history.push(`${expression} = ${result}`);
-            if (history.length > 5) history.shift();
-            expression = result;
+        // For functions that take an argument (e.g., sin, cos)
+        if (['sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh', 'ln', 'log', '1/x', 'e^x', '10^x', 'x^2', 'sqrt', 'n!'].includes(value)) {
+            if (expression === '0') {
+                expression = `${value}(`;
+            } else if (isOperatorOrParen) {
+                expression += `${value}(`;
+            } else {
+                expression += ` ${value}(`;
+            }
+        } else {
+            // For constants (e.g., pi, e)
+            if (expression === '0') {
+                expression = value;
+            } else if (isOperatorOrParen) {
+                expression += value;
+            } else {
+                expression += ` ${value}`;
+            }
         }
     }
 
     function handleMemory(value) {
-        // Ensure the current expression is evaluated to get the latest result
         if (expression && expression !== '0') {
             evaluateExpression();
         }
-        const num = parseFloat(result) || 0; // Use the latest result
+        const num = parseFloat(result) || 0;
 
         switch (value) {
             case 'MC':
@@ -168,8 +158,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function evaluateSimpleExpression(exp) {
         try {
-            const cleaned = exp.replace(/\^/g, '**');
-            return Function(`'use strict';return (${cleaned})`)();
+            let cleaned = exp.replace(/pi/g, Math.PI.toString())
+                            .replace(/e/g, Math.E.toString())
+                            .replace(/\^/g, '**');
+
+            // Replace functions with their JavaScript equivalents
+            cleaned = cleaned.replace(/sin\(([^)]+)\)/g, (_, arg) => `Math.sin((${arg}) * Math.PI / 180)`)
+                            .replace(/cos\(([^)]+)\)/g, (_, arg) => `Math.cos((${arg}) * Math.PI / 180)`)
+                            .replace(/tan\(([^)]+)\)/g, (_, arg) => `Math.tan((${arg}) * Math.PI / 180)`)
+                            .replace(/sec\(([^)]+)\)/g, (_, arg) => `1/Math.cos((${arg}) * Math.PI / 180)`)
+                            .replace(/csc\(([^)]+)\)/g, (_, arg) => `1/Math.sin((${arg}) * Math.PI / 180)`)
+                            .replace(/cot\(([^)]+)\)/g, (_, arg) => `1/Math.tan((${arg}) * Math.PI / 180)`)
+                            .replace(/asin\(([^)]+)\)/g, (_, arg) => `(Math.asin(${arg}) * 180 / Math.PI)`)
+                            .replace(/acos\(([^)]+)\)/g, (_, arg) => `(Math.acos(${arg}) * 180 / Math.PI)`)
+                            .replace(/atan\(([^)]+)\)/g, (_, arg) => `(Math.atan(${arg}) * 180 / Math.PI)`)
+                            .replace(/sinh\(([^)]+)\)/g, (_, arg) => `Math.sinh(${arg})`)
+                            .replace(/cosh\(([^)]+)\)/g, (_, arg) => `Math.cosh(${arg})`)
+                            .replace(/tanh\(([^)]+)\)/g, (_, arg) => `Math.tanh(${arg})`)
+                            .replace(/ln\(([^)]+)\)/g, (_, arg) => `Math.log(${arg})`)
+                            .replace(/log\(([^)]+)\)/g, (_, arg) => `Math.log10(${arg})`)
+                            .replace(/1\/x\(([^)]+)\)/g, (_, arg) => `1/(${arg})`)
+                            .replace(/x\^y\(([^)]+)\)/g, (_, arg) => `Math.pow(${arg})`)
+                            .replace(/y\^x\(([^)]+)\)/g, (_, arg) => `Math.pow(${arg})`)
+                            .replace(/e\^x\(([^)]+)\)/g, (_, arg) => `Math.exp(${arg})`)
+                            .replace(/10\^x\(([^)]+)\)/g, (_, arg) => `Math.pow(10, ${arg})`)
+                            .replace(/x\^2\(([^)]+)\)/g, (_, arg) => `Math.pow(${arg}, 2)`)
+                            .replace(/sqrt\(([^)]+)\)/g, (_, arg) => `Math.sqrt(${arg})`)
+                            .replace(/n!\(([^)]+)\)/g, (_, arg) => `factorial(${arg})`);
+
+            return Function('factorial', `'use strict';return (${cleaned})`)(factorial);
         } catch (e) {
             throw new Error('Invalid Expression');
         }
@@ -179,29 +196,34 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!expression || expression === '0') return;
         try {
             const cleaned = expression.replace(/\^/g, '**')
-                                     .replace(/ln\(([^)]+)\)/g, 'Math.log($1)')
-                                     .replace(/1\/x\(([^)]+)\)/g, '1/($1)')
-                                     .replace(/x\^y\(([^)]+)\)/g, 'Math.pow($1)')
-                                     .replace(/log\(([^)]+)\)/g, 'Math.log10($1)')
-                                     .replace(/e\^x\(([^)]+)\)/g, 'Math.exp($1)')
-                                     .replace(/sec\(([^)]+)\)/g, '1/Math.cos($1 * Math.PI / 180)')
-                                     .replace(/acos\(([^)]+)\)/g, 'Math.acos($1) * 180 / Math.PI')
-                                     .replace(/y\^x\(([^)]+)\)/g, 'Math.pow($1)')
-                                     .replace(/10\^x\(([^)]+)\)/g, 'Math.pow(10, $1)')
-                                     .replace(/x\^2\(([^)]+)\)/g, 'Math.pow($1, 2)')
-                                     .replace(/csc\(([^)]+)\)/g, '1/Math.sin($1 * Math.PI / 180)')
-                                     .replace(/n!\(([^)]+)\)/g, 'factorial($1)')
-                                     .replace(/cos\(([^)]+)\)/g, 'Math.cos($1 * Math.PI / 180)')
-                                     .replace(/cosh\(([^)]+)\)/g, 'Math.cosh($1)')
-                                     .replace(/tanh\(([^)]+)\)/g, 'Math.tanh($1)')
-                                     .replace(/sqrt\(([^)]+)\)/g, 'Math.sqrt($1)')
-                                     .replace(/sinh\(([^)]+)\)/g, 'Math.sinh($1)')
-                                     .replace(/asin\(([^)]+)\)/g, 'Math.asin($1) * 180 / Math.PI')
-                                     .replace(/atan\(([^)]+)\)/g, 'Math.atan($1) * 180 / Math.PI')
-                                     .replace(/cot\(([^)]+)\)/g, '1/Math.tan($1 * Math.PI / 180)')
-                                     .replace(/sin\(([^)]+)\)/g, 'Math.sin($1 * Math.PI / 180)')
-                                     .replace(/tan\(([^)]+)\)/g, 'Math.tan($1 * Math.PI / 180)');
-            result = Function('factorial', `'use strict';return (${cleaned})`)(factorial).toFixed(6).toString();
+                                    .replace(/pi/g, Math.PI.toString())
+                                    .replace(/e/g, Math.E.toString());
+
+            // Replace functions with their JavaScript equivalents
+            const evaluated = cleaned.replace(/sin\(([^)]+)\)/g, (_, arg) => `Math.sin((${arg}) * Math.PI / 180)`)
+                                    .replace(/cos\(([^)]+)\)/g, (_, arg) => `Math.cos((${arg}) * Math.PI / 180)`)
+                                    .replace(/tan\(([^)]+)\)/g, (_, arg) => `Math.tan((${arg}) * Math.PI / 180)`)
+                                    .replace(/sec\(([^)]+)\)/g, (_, arg) => `1/Math.cos((${arg}) * Math.PI / 180)`)
+                                    .replace(/csc\(([^)]+)\)/g, (_, arg) => `1/Math.sin((${arg}) * Math.PI / 180)`)
+                                    .replace(/cot\(([^)]+)\)/g, (_, arg) => `1/Math.tan((${arg}) * Math.PI / 180)`)
+                                    .replace(/asin\(([^)]+)\)/g, (_, arg) => `(Math.asin(${arg}) * 180 / Math.PI)`)
+                                    .replace(/acos\(([^)]+)\)/g, (_, arg) => `(Math.acos(${arg}) * 180 / Math.PI)`)
+                                    .replace(/atan\(([^)]+)\)/g, (_, arg) => `(Math.atan(${arg}) * 180 / Math.PI)`)
+                                    .replace(/sinh\(([^)]+)\)/g, (_, arg) => `Math.sinh(${arg})`)
+                                    .replace(/cosh\(([^)]+)\)/g, (_, arg) => `Math.cosh(${arg})`)
+                                    .replace(/tanh\(([^)]+)\)/g, (_, arg) => `Math.tanh(${arg})`)
+                                    .replace(/ln\(([^)]+)\)/g, (_, arg) => `Math.log(${arg})`)
+                                    .replace(/log\(([^)]+)\)/g, (_, arg) => `Math.log10(${arg})`)
+                                    .replace(/1\/x\(([^)]+)\)/g, (_, arg) => `1/(${arg})`)
+                                    .replace(/x\^y\(([^)]+)\)/g, (_, arg) => `Math.pow(${arg})`)
+                                    .replace(/y\^x\(([^)]+)\)/g, (_, arg) => `Math.pow(${arg})`)
+                                    .replace(/e\^x\(([^)]+)\)/g, (_, arg) => `Math.exp(${arg})`)
+                                    .replace(/10\^x\(([^)]+)\)/g, (_, arg) => `Math.pow(10, ${arg})`)
+                                    .replace(/x\^2\(([^)]+)\)/g, (_, arg) => `Math.pow(${arg}, 2)`)
+                                    .replace(/sqrt\(([^)]+)\)/g, (_, arg) => `Math.sqrt(${arg})`)
+                                    .replace(/n!\(([^)]+)\)/g, (_, arg) => `factorial(${arg})`);
+
+            result = Function('factorial', `'use strict';return (${evaluated})`)(factorial).toFixed(6).toString();
             history.push(`${expression} = ${result}`);
             if (history.length > 5) history.shift();
             expression = result;
