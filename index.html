@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -15,40 +14,49 @@
             <div id="result">0</div>
         </div>
         <div id="calculator-sections">
-            <!-- Left Section: Scientific Functions -->
-            <div id="scientific-functions">
-                <button class="calc-btn func" data-value="ln">ln</button>
-                <button class="calc-btn func" data-value="1/x">1/x</button>
-                <button class="calc-btn func" data-value="x^y">x^y</button>
-                <button class="calc-btn func" data-value="log">log</button>
-                <button class="calc-btn func" data-value="e^x">e^x</button>
-                <button class="calc-btn func" data-value="sec">sec</button>
-                <button class="calc-btn func" data-value="acos">acos</button>
-                <button class="calc-btn func" data-value="y^x">y^x</button>
-                <button class="calc-btn func" data-value="e">e</button>
-                <button class="calc-btn func" data-value="x^2">x^2</button>
-                <button class="calc-btn func" data-value="csc">csc</button>
-                <button class="calc-btn func" data-value="n!">n!</button>
-                <button class="calc-btn func" data-value="cos">cos</button>
-                <button class="calc-btn func" data-value="cosh">cosh</button>
-                <button class="calc-btn func" data-value="tanh">tanh</button>
-                <button class="calc-btn func" data-value="sqrt">√</button>
-                <button class="calc-btn func" data-value="sinh">sinh</button>
-                <button class="calc-btn func" data-value="asin">asin</button>
-                <button class="calc-btn func" data-value="atan">atan</button>
-                <button class="calc-btn func" data-value="cot">cot</button>
-                <button class="calc-btn func" data-value="sin">sin</button>
-                <button class="calc-btn func" data-value="tan">tan</button>
-                <button class="calc-btn func" data-value="pi">π</button>
-                <button class="calc-btn func" data-value="10^x">10^x</button>
+            <!-- Collapsible Scientific Functions -->
+            <div id="scientific-functions-container">
+                <button id="functions-button" class="calc-btn operator">Functions</button>
+                <div id="scientific-functions-wrapper">
+                    <div id="scientific-functions">
+                        <!-- Trigonometric Functions -->
+                        <button class="calc-btn func" data-value="sin">sin</button>
+                        <button class="calc-btn func" data-value="cos">cos</button>
+                        <button class="calc-btn func" data-value="tan">tan</button>
+                        <button class="calc-btn func" data-value="sec">sec</button>
+                        <button class="calc-btn func" data-value="csc">csc</button>
+                        <button class="calc-btn func" data-value="cot">cot</button>
+                        <button class="calc-btn func" data-value="asin">asin</button>
+                        <button class="calc-btn func" data-value="acos">acos</button>
+                        <button class="calc-btn func" data-value="atan">atan</button>
+                        <button class="calc-btn func" data-value="sinh">sinh</button>
+                        <button class="calc-btn func" data-value="cosh">cosh</button>
+                        <button class="calc-btn func" data-value="tanh">tanh</button>
+                        <!-- Other Functions -->
+                        <button class="calc-btn func" data-value="ln">ln</button>
+                        <button class="calc-btn func" data-value="log">log</button>
+                        <button class="calc-btn func" data-value="1/x">1/x</button>
+                        <button class="calc-btn func" data-value="x^y">x^y</button>
+                        <button class="calc-btn func" data-value="y^x">y^x</button>
+                        <button class="calc-btn func" data-value="e^x">e^x</button>
+                        <button class="calc-btn func" data-value="10^x">10^x</button>
+                        <button class="calc-btn func" data-value="x^2">x^2</button>
+                        <button class="calc-btn func" data-value="sqrt">√</button>
+                        <button class="calc-btn func" data-value="n!">n!</button>
+                        <button class="calc-btn func" data-value="e">e</button>
+                        <button class="calc-btn func" data-value="pi">π</button>
+                    </div>
+                </div>
             </div>
             <!-- Right Section: Numbers and Operators -->
             <div id="number-operators">
                 <div id="utility-buttons">
                     <button class="calc-btn operator" data-value="C">C</button>
+                    <button class="calc-btn operator" data-value="(">(</button>
+                    <button class="calc-btn operator" data-value=")">)</button>
+                    <button class="calc-btn operator" data-value="DEL">DEL</button>
                     <button class="calc-btn operator" data-value="+/-">+/-</button>
                     <button class="calc-btn operator" data-value="%">%</button>
-                    <button class="calc-btn operator" data-value="DEL">DEL</button>
                     <button class="calc-btn memory" data-value="MC">MC</button>
                     <button class="calc-btn memory" data-value="MR">MR</button>
                     <button class="calc-btn memory" data-value="M+">M+</button>
